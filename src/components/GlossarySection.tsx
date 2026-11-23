@@ -27,16 +27,16 @@ export function GlossarySection({ terms }: GlossarySectionProps) {
       id="glossary-section"
       className="border-b border-stone-200 bg-[#FBF9F5] py-12 sm:py-16"
     >
-      <div className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10">
         <div className="flex flex-col justify-between gap-5 border-b border-stone-200 pb-6 lg:flex-row lg:items-end">
           <div>
-            <p className="text-xs font-medium text-stone-500">
+            <p className="text-base font-bold text-stone-600 sm:text-lg">
               آسان فقہی لغت · عام فہم تشریح
             </p>
-            <h2 className="font-nastaliq mt-1 text-2xl font-bold text-[#1C1917] sm:text-3xl">
+            <h2 className="font-nastaliq mt-1 text-3xl font-bold text-[#0F0D0B] sm:text-5xl">
               فقہ و فتاویٰ کی بنیادی اصطلاحات کا آسان تعارف
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-[1.9] text-stone-600">
+            <p className="mt-3 max-w-3xl text-lg font-bold leading-[1.95] text-[#1C1917] sm:text-2xl">
               عربی فقہی الفاظ کو روزمرہ مثالوں کی مدد سے سمجھیں تاکہ فتاویٰ
               پڑھتے وقت کوئی الجھن باقی نہ رہے۔
             </p>
@@ -46,17 +46,17 @@ export function GlossarySection({ terms }: GlossarySectionProps) {
           <div
             role="group"
             aria-label="لغت کی قسم منتخب کریں"
-            className="flex flex-wrap items-center gap-1 rounded-md border border-stone-200 bg-[#F2EDE3] p-1"
+            className="flex flex-wrap items-center gap-1 rounded-md border border-stone-300 bg-[#F2EDE3] p-1"
           >
             {CATEGORIES.map((category) => (
               <button
                 key={category}
                 type="button"
                 onClick={() => setSelectedCategory(category)}
-                className={`min-h-[38px] whitespace-nowrap rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`min-h-[44px] whitespace-nowrap rounded px-4 py-2 text-base font-bold transition-colors ${
                   selectedCategory === category
                     ? 'bg-[#FBF9F5] text-[#14532D] shadow-xs'
-                    : 'text-stone-600 hover:text-[#1C1917]'
+                    : 'text-stone-700 hover:text-[#0F0D0B]'
                 }`}
               >
                 {category}
@@ -70,10 +70,10 @@ export function GlossarySection({ terms }: GlossarySectionProps) {
           {filteredTerms.map((item) => (
             <div
               key={item.id}
-              className="flex flex-col justify-between rounded-md border border-stone-200 bg-white p-5"
+              className="flex flex-col justify-between rounded-md border border-stone-300 bg-white p-6 sm:p-7"
             >
               <div>
-                <div className="flex items-center justify-between gap-2 text-xs text-stone-500">
+                <div className="flex items-center justify-between gap-2 text-sm font-bold text-stone-600 sm:text-base">
                   <span>{item.category}</span>
                   {item.arabicOrRoot && (
                     <>
@@ -83,20 +83,20 @@ export function GlossarySection({ terms }: GlossarySectionProps) {
                   )}
                 </div>
 
-                <h3 className="font-nastaliq mt-2 text-lg font-bold text-[#1C1917]">
+                <h3 className="font-nastaliq mt-3 text-2xl font-bold text-[#0F0D0B] sm:text-[1.8rem]">
                   {item.term}
                 </h3>
 
-                <p className="mt-2.5 text-sm leading-[1.9] text-stone-700">
+                <p className="mt-3 text-lg font-bold leading-[1.95] text-[#1C1917] sm:text-2xl">
                   {item.easyDefinition}
                 </p>
               </div>
 
-              <div className="mt-4 border-t border-stone-200/80 pt-3">
-                <div className="text-xs font-semibold text-[#14532D]">
+              <div className="mt-5 border-t border-stone-200/80 pt-3.5">
+                <div className="text-base font-bold text-[#14532D]">
                   آسان مثال:
                 </div>
-                <p className="mt-1 text-xs leading-[1.85] text-stone-600">
+                <p className="mt-1 text-base font-bold leading-[1.95] text-stone-800 sm:text-xl">
                   {item.everydayExample}
                 </p>
               </div>

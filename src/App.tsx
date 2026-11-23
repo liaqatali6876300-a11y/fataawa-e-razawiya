@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ALL_CHAPTERS,
   GLOSSARY_TERMS,
@@ -35,6 +35,7 @@ export default function App() {
   const [activeMasalaId, setActiveMasalaId] = useState<string>(
     ALL_CHAPTERS[0].masail[0].id
   );
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [savedMasalaIds, setSavedMasalaIds] = useState<string[]>(() =>
     readStoredIds(SAVED_STORAGE_KEY)
   );
@@ -42,6 +43,8 @@ export default function App() {
     readStoredIds(STUDIED_STORAGE_KEY)
   );
   const [isSavedModalOpen, setIsSavedModalOpen] = useState(false);
+
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     try {
@@ -77,18 +80,28 @@ export default function App() {
     }
   };
 
+  const handleFocusMainSearch = () => {
+    scrollToSection('top');
+    window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 250);
+  };
+
   const handleSelectChapter = (chapterId: string, masalaId?: string) => {
     const targetChapter =
       ALL_CHAPTERS.find((c) => c.id === chapterId) ?? ALL_CHAPTERS[0];
     setActiveChapterId(targetChapter.id);
-    if (
-      masalaId &&
-      targetChapter.masail.some((m) => m.id === masalaId)
-    ) {
+    if (masalaId && targetChapter.masail.some((m) => m.id === masalaId)) {
       setActiveMasalaId(masalaId);
     } else {
       setActiveMasalaId(targetChapter.masail[0].id);
     }
+  };
+
+  const handleSelectSearchResult = (chapterId: string, masalaId: string) => {
+    handleSelectChapter(chapterId, masalaId);
+    setSearchQuery('');
+    scrollToSection('chapters-workspace');
   };
 
   const handleOpenChapterFromVolumes = (chapterId: string) => {
@@ -118,12 +131,18 @@ export default function App() {
         savedCount={savedMasalaIds.length}
         onOpenSaved={() => setIsSavedModalOpen(true)}
         onJumpToSection={scrollToSection}
+        onFocusSearch={handleFocusMainSearch}
       />
 
       <HeroBroadsheet
+        chapters={ALL_CHAPTERS}
         totalChapters={ALL_CHAPTERS.length}
         totalMasail={totalMasailCount}
         studiedCount={studiedChapterIds.length}
+        searchQuery={searchQuery}
+        searchInputRef={searchInputRef}
+        onSearchChange={setSearchQuery}
+        onSelectSearchResult={handleSelectSearchResult}
         onStartReading={() => scrollToSection('chapters-workspace')}
         onViewVolumes={() => scrollToSection('volumes-map')}
       />
@@ -134,6 +153,8 @@ export default function App() {
         activeMasalaId={activeMasalaId}
         savedMasalaIds={savedMasalaIds}
         studiedChapterIds={studiedChapterIds}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         onSelectChapter={handleSelectChapter}
         onSelectMasala={(id) => setActiveMasalaId(id)}
         onToggleSaveMasala={handleToggleSaveMasala}
