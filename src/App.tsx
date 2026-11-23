@@ -1,19 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ALL_CHAPTERS,
-  GLOSSARY_TERMS,
-  VOLUME_CLUSTERS,
-} from './data/fatawaData';
-import { Header } from './components/Header';
-import { HeroBroadsheet } from './components/HeroBroadsheet';
-import { ChapterReaderWorkspace } from './components/ChapterReaderWorkspace';
-import { VolumesMapSection } from './components/VolumesMapSection';
-import { GlossarySection } from './components/GlossarySection';
-import { SavedBookmarksModal } from './components/SavedBookmarksModal';
-import { Footer } from './components/Footer';
+import { useEffect, useMemo, useState } from 'react';
+import { ALL_JILDS } from './data/fatawaCatalog';
+import { Bab, Jild, JildCategory } from './types/fatawa';
+import { Navbar } from './components/Navbar';
+import { HomeJildList } from './components/HomeJildList';
+import { JildAbwabPage } from './components/JildAbwabPage';
+import { BabDetailPage } from './components/BabDetailPage';
+import { GlossaryView } from './components/GlossaryView';
+import { SavedItemsModal } from './components/SavedItemsModal';
 
-const SAVED_STORAGE_KEY = 'fatawa_razawiya_saved_masail_v1';
-const STUDIED_STORAGE_KEY = 'fatawa_razawiya_studied_chapters_v1';
+type AppPage = 'home' | 'jild' | 'bab' | 'glossary';
+
+const STUDIED_STORAGE_KEY = 'fatawa_razawiya_studied_v2';
+const BOOKMARKS_STORAGE_KEY = 'fatawa_razawiya_bookmarks_v2';
 
 function readStoredIds(key: string): string[] {
   try {
@@ -21,7 +19,7 @@ function readStoredIds(key: string): string[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed)
-      ? parsed.filter((item): item is string => typeof item === 'string')
+      ? parsed.filter((x): x is string => typeof x === 'string')
       : [];
   } catch {
     return [];
@@ -29,160 +27,196 @@ function readStoredIds(key: string): string[] {
 }
 
 export default function App() {
-  const [activeChapterId, setActiveChapterId] = useState<string>(
-    ALL_CHAPTERS[0].id
-  );
-  const [activeMasalaId, setActiveMasalaId] = useState<string>(
-    ALL_CHAPTERS[0].masail[0].id
+  const [page, setPage] = useState<AppPage>('home');
+  const [selectedJildId, setSelectedJildId] = useState<string>(ALL_JILDS[0].id);
+  const [selectedBabId, setSelectedBabId] = useState<string>(
+    ALL_JILDS[0].abwab[0].id
   );
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [savedMasalaIds, setSavedMasalaIds] = useState<string[]>(() =>
-    readStoredIds(SAVED_STORAGE_KEY)
-  );
-  const [studiedChapterIds, setStudiedChapterIds] = useState<string[]>(() =>
+  const [selectedCategory, setSelectedCategory] = useState<
+    JildCategory | 'all'
+  >('all');
+  const [isSavedOpen, setIsSavedOpen] = useState<boolean>(false);
+
+  const [studiedBabIds, setStudiedBabIds] = useState<string[]>(() =>
     readStoredIds(STUDIED_STORAGE_KEY)
   );
-  const [isSavedModalOpen, setIsSavedModalOpen] = useState(false);
-
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        SAVED_STORAGE_KEY,
-        JSON.stringify(savedMasalaIds)
-      );
-    } catch {
-      // Ignore storage quota errors
-    }
-  }, [savedMasalaIds]);
+  const [bookmarkedBabIds, setBookmarkedBabIds] = useState<string[]>(() =>
+    readStoredIds(BOOKMARKS_STORAGE_KEY)
+  );
 
   useEffect(() => {
     try {
       window.localStorage.setItem(
         STUDIED_STORAGE_KEY,
-        JSON.stringify(studiedChapterIds)
+        JSON.stringify(studiedBabIds)
       );
     } catch {
-      // Ignore storage quota errors
+      // Ignore storage errors
     }
-  }, [studiedChapterIds]);
+  }, [studiedBabIds]);
 
-  const totalMasailCount = useMemo(
-    () => ALL_CHAPTERS.reduce((acc, ch) => acc + ch.masail.length, 0),
-    []
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        BOOKMARKS_STORAGE_KEY,
+        JSON.stringify(bookmarkedBabIds)
+      );
+    } catch {
+      // Ignore storage errors
+    }
+  }, [bookmarkedBabIds]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page, selectedJildId, selectedBabId]);
+
+  const currentJildIndex = useMemo(
+    () => ALL_JILDS.findIndex((j) => j.id === selectedJildId),
+    [selectedJildId]
   );
 
-  const scrollToSection = (sectionId: string) => {
-    const el = document.getElementById(sectionId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const currentJild: Jild =
+    currentJildIndex >= 0 ? ALL_JILDS[currentJildIndex] : ALL_JILDS[0];
+
+  const currentBabIndex = useMemo(
+    () => currentJild.abwab.findIndex((b) => b.id === selectedBabId),
+    [currentJild, selectedBabId]
+  );
+
+  const currentBab: Bab =
+    currentBabIndex >= 0
+      ? currentJild.abwab[currentBabIndex]
+      : currentJild.abwab[0];
+
+  const savedItems = useMemo(() => {
+    const bookmarkSet = new Set(bookmarkedBabIds);
+    const items: { jild: Jild; bab: Bab }[] = [];
+    for (const jild of ALL_JILDS) {
+      for (const bab of jild.abwab) {
+        if (bookmarkSet.has(bab.id)) {
+          items.push({ jild, bab });
+        }
+      }
     }
+    return items;
+  }, [bookmarkedBabIds]);
+
+  const handleOpenJild = (jildId: string) => {
+    setSelectedJildId(jildId);
+    setPage('jild');
   };
 
-  const handleFocusMainSearch = () => {
-    scrollToSection('top');
-    window.setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 250);
+  const handleOpenBab = (jildId: string, babId: string) => {
+    setSelectedJildId(jildId);
+    setSelectedBabId(babId);
+    setPage('bab');
   };
 
-  const handleSelectChapter = (chapterId: string, masalaId?: string) => {
-    const targetChapter =
-      ALL_CHAPTERS.find((c) => c.id === chapterId) ?? ALL_CHAPTERS[0];
-    setActiveChapterId(targetChapter.id);
-    if (masalaId && targetChapter.masail.some((m) => m.id === masalaId)) {
-      setActiveMasalaId(masalaId);
-    } else {
-      setActiveMasalaId(targetChapter.masail[0].id);
-    }
-  };
-
-  const handleSelectSearchResult = (chapterId: string, masalaId: string) => {
-    handleSelectChapter(chapterId, masalaId);
-    setSearchQuery('');
-    scrollToSection('chapters-workspace');
-  };
-
-  const handleOpenChapterFromVolumes = (chapterId: string) => {
-    handleSelectChapter(chapterId);
-    scrollToSection('chapters-workspace');
-  };
-
-  const handleToggleSaveMasala = (masalaId: string) => {
-    setSavedMasalaIds((prev) =>
-      prev.includes(masalaId)
-        ? prev.filter((id) => id !== masalaId)
-        : [...prev, masalaId]
+  const handleToggleStudied = (babId: string) => {
+    setStudiedBabIds((prev) =>
+      prev.includes(babId)
+        ? prev.filter((id) => id !== babId)
+        : [...prev, babId]
     );
   };
 
-  const handleToggleStudiedChapter = (chapterId: string) => {
-    setStudiedChapterIds((prev) =>
-      prev.includes(chapterId)
-        ? prev.filter((id) => id !== chapterId)
-        : [...prev, chapterId]
+  const handleToggleBookmark = (babId: string) => {
+    setBookmarkedBabIds((prev) =>
+      prev.includes(babId)
+        ? prev.filter((id) => id !== babId)
+        : [...prev, babId]
     );
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] text-[#1C1917]" dir="rtl">
-      <Header
-        savedCount={savedMasalaIds.length}
-        onOpenSaved={() => setIsSavedModalOpen(true)}
-        onJumpToSection={scrollToSection}
-        onFocusSearch={handleFocusMainSearch}
+    <div className="flex min-h-screen flex-col text-white">
+      <Navbar
+        activeTab={page === 'glossary' ? 'glossary' : 'home'}
+        onGoHome={() => setPage('home')}
+        onGoGlossary={() => setPage('glossary')}
+        onOpenSaved={() => setIsSavedOpen(true)}
+        savedCount={savedItems.length}
       />
 
-      <HeroBroadsheet
-        chapters={ALL_CHAPTERS}
-        totalChapters={ALL_CHAPTERS.length}
-        totalMasail={totalMasailCount}
-        studiedCount={studiedChapterIds.length}
-        searchQuery={searchQuery}
-        searchInputRef={searchInputRef}
-        onSearchChange={setSearchQuery}
-        onSelectSearchResult={handleSelectSearchResult}
-        onStartReading={() => scrollToSection('chapters-workspace')}
-        onViewVolumes={() => scrollToSection('volumes-map')}
-      />
+      <div className="flex-1">
+        {page === 'home' && (
+          <HomeJildList
+            jilds={ALL_JILDS}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            studiedBabIds={studiedBabIds}
+            onSelectJild={handleOpenJild}
+            onSelectBab={handleOpenBab}
+          />
+        )}
 
-      <ChapterReaderWorkspace
-        chapters={ALL_CHAPTERS}
-        activeChapterId={activeChapterId}
-        activeMasalaId={activeMasalaId}
-        savedMasalaIds={savedMasalaIds}
-        studiedChapterIds={studiedChapterIds}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSelectChapter={handleSelectChapter}
-        onSelectMasala={(id) => setActiveMasalaId(id)}
-        onToggleSaveMasala={handleToggleSaveMasala}
-        onToggleStudiedChapter={handleToggleStudiedChapter}
-      />
+        {page === 'jild' && (
+          <JildAbwabPage
+            jild={currentJild}
+            studiedBabIds={studiedBabIds}
+            hasPrevJild={currentJildIndex > 0}
+            hasNextJild={currentJildIndex < ALL_JILDS.length - 1}
+            onBackHome={() => setPage('home')}
+            onSelectBab={(babId) => handleOpenBab(currentJild.id, babId)}
+            onGoPrevJild={() => {
+              if (currentJildIndex > 0) {
+                setSelectedJildId(ALL_JILDS[currentJildIndex - 1].id);
+              }
+            }}
+            onGoNextJild={() => {
+              if (currentJildIndex < ALL_JILDS.length - 1) {
+                setSelectedJildId(ALL_JILDS[currentJildIndex + 1].id);
+              }
+            }}
+          />
+        )}
 
-      <VolumesMapSection
-        clusters={VOLUME_CLUSTERS}
-        onOpenChapter={handleOpenChapterFromVolumes}
-      />
+        {page === 'bab' && (
+          <BabDetailPage
+            jild={currentJild}
+            bab={currentBab}
+            isBookmarked={bookmarkedBabIds.includes(currentBab.id)}
+            isStudied={studiedBabIds.includes(currentBab.id)}
+            hasPrevBab={currentBabIndex > 0}
+            hasNextBab={currentBabIndex < currentJild.abwab.length - 1}
+            onBackToJild={() => setPage('jild')}
+            onToggleBookmark={() => handleToggleBookmark(currentBab.id)}
+            onToggleStudied={() => handleToggleStudied(currentBab.id)}
+            onGoPrevBab={() => {
+              if (currentBabIndex > 0) {
+                setSelectedBabId(currentJild.abwab[currentBabIndex - 1].id);
+              }
+            }}
+            onGoNextBab={() => {
+              if (currentBabIndex < currentJild.abwab.length - 1) {
+                setSelectedBabId(currentJild.abwab[currentBabIndex + 1].id);
+              }
+            }}
+          />
+        )}
 
-      <GlossarySection terms={GLOSSARY_TERMS} />
+        {page === 'glossary' && (
+          <GlossaryView onBackHome={() => setPage('home')} />
+        )}
+      </div>
 
-      <Footer onJumpToSection={scrollToSection} />
+      <footer className="mt-12 border-t border-[#1E2E54] bg-[#081023] py-6 text-center">
+        <div className="mx-auto max-w-6xl px-4">
+          <p className="text-base text-[#CBD5E1] sm:text-lg leading-[2]">
+            فتاویٰ رضویہ — مکمل ۳۰ جلدیں آسان اردو زبان اور مستند دلائل کے ساتھ
+          </p>
+        </div>
+      </footer>
 
-      <SavedBookmarksModal
-        isOpen={isSavedModalOpen}
-        chapters={ALL_CHAPTERS}
-        savedIds={savedMasalaIds}
-        onClose={() => setIsSavedModalOpen(false)}
-        onSelectItem={(chapterId, masalaId) => {
-          handleSelectChapter(chapterId, masalaId);
-          scrollToSection('chapters-workspace');
-        }}
-        onRemoveItem={(masalaId) =>
-          setSavedMasalaIds((prev) => prev.filter((id) => id !== masalaId))
-        }
-        onClearAll={() => setSavedMasalaIds([])}
+      <SavedItemsModal
+        isOpen={isSavedOpen}
+        items={savedItems}
+        onClose={() => setIsSavedOpen(false)}
+        onSelectBab={handleOpenBab}
+        onRemoveBookmark={handleToggleBookmark}
       />
     </div>
   );

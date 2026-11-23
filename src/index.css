@@ -2,7 +2,6 @@
 
 @theme {
   --font-nastaliq: "Gulzar", "Noto Nastaliq Urdu", serif;
-  --font-naskh: "Gulzar", "Noto Nastaliq Urdu", serif;
 }
 
 @layer base {
@@ -11,8 +10,9 @@
     font-family: "Gulzar", "Noto Nastaliq Urdu", serif;
     font-weight: 600;
     scroll-behavior: smooth;
-    background-color: #FBF9F5;
-    color: #0F0D0B;
+    background: linear-gradient(180deg, #070d1d 0%, #0b142b 50%, #070d1d 100%);
+    background-attachment: fixed;
+    color: #ffffff;
   }
 
   p {
@@ -36,17 +36,7 @@
   input,
   select {
     font-family: "Gulzar", "Noto Nastaliq Urdu", serif;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  dd,
-  dt,
-  li {
+    font-weight: 600;
     text-shadow: 0.3px 0 0 currentColor;
   }
 
@@ -54,7 +44,9 @@
     html {
       scroll-behavior: auto;
     }
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -64,11 +56,9 @@
 
 .font-nastaliq {
   font-family: "Gulzar", "Noto Nastaliq Urdu", serif;
-  line-height: 2.25;
-}
-
-.font-naskh {
-  font-family: "Gulzar", "Noto Nastaliq Urdu", serif;
+  font-weight: 600;
+  text-shadow: 0.3px 0 0 currentColor;
+  line-height: 2.15;
 }
 
 .tabular-nums {

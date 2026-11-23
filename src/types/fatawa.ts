@@ -1,66 +1,28 @@
-export type RulingLevel =
-  | 'فرضِ عین'
-  | 'واجب'
-  | 'سنتِ مؤکدہ'
-  | 'مستحب و مسنون'
-  | 'مباح و جائز'
-  | 'مکروہ و ممنوع'
-  | 'حرام و ناجائز'
-  | 'فقہی و علمی اصول';
+export type JildCategory =
+  | 'طہارت و نماز'
+  | 'زکوٰۃ، روزہ و حج'
+  | 'نکاح و طلاق'
+  | 'عقائد و ایمانیات'
+  | 'تجارت و معاملات'
+  | 'آداب، میراث و علوم';
 
-export interface Masala {
+export interface Bab {
   id: string;
-  numberUrdu: string;
+  babNumber: number;
   title: string;
-  ruling: RulingLevel;
-  question: string;
+  pageNumber: number;
+  shortSummary: string;
+  maslaDetail: string;
+  daleelDetail: string;
   easyExplanation: string[];
-  principlesAndProofs: string;
-  practicalTakeaway: string;
-  reference: string;
-  keywords: string[];
+  referenceNote: string;
 }
 
-export interface ChapterMarginNote {
-  term: string;
-  meaning: string;
-}
-
-export interface Chapter {
+export interface Jild {
   id: string;
-  numberUrdu: string;
-  arabicTitle: string;
-  urduTitle: string;
-  volumeSpan: string;
-  summary: string;
-  introduction: string;
-  keyTreatises: string[];
-  marginNotes: ChapterMarginNote[];
-  masail: Masala[];
-  relatedChapterIds: string[];
-  romanKeywords: string[];
-}
-
-export interface VolumeCluster {
-  id: string;
-  volumesUrdu: string;
+  jildNumber: number;
   title: string;
-  arabicScope: string;
-  description: string;
-  famousRasail: string[];
-  linkedChapterId: string;
-}
-
-export type GlossaryCategory =
-  | 'احکامِ شرعیہ'
-  | 'طہارت و عبادات'
-  | 'معاملات و عائلی قوانین';
-
-export interface GlossaryTerm {
-  id: string;
-  term: string;
-  arabicOrRoot?: string;
-  category: GlossaryCategory;
-  easyDefinition: string;
-  everydayExample: string;
+  category: JildCategory;
+  shortIntro: string;
+  abwab: Bab[];
 }
